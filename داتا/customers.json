@@ -1,0 +1,122 @@
+[
+  {
+    "id": "c1764692796244",
+    "name": "ضي",
+    "phone": "",
+    "address": "",
+    "notes": "",
+    "debt": 0,
+    "invoiceCount": 1,
+    "lastTransaction": "2025-12-02"
+  },
+  {
+    "id": "c1764692191253",
+    "name": "ضي",
+    "phone": "",
+    "address": "",
+    "notes": "",
+    "debt": 0,
+    "invoiceCount": 1,
+    "lastTransaction": "2025-12-02"
+  },
+  {
+    "id": "c1763346304321",
+    "name": "الاء ",
+    "phone": "",
+    "address": "",
+    "notes": " ",
+    "debt": 0,
+    "invoiceCount": 1,
+    "lastTransaction": "2025-11-17"
+  },
+  {
+    "id": "c1759422215630",
+    "name": "ابو امينه",
+    "phone": "",
+    "address": "",
+    "notes": "",
+    "debt": 321.6,
+    "invoiceCount": 1,
+    "lastTransaction": "2025-10-02"
+  },
+  {
+    "id": "c1758887703121",
+    "name": "امين فخر الدين ",
+    "phone": "",
+    "address": "",
+    "notes": "",
+    "debt": 0,
+    "invoiceCount": 2,
+    "lastTransaction": "2025-10-11"
+  },
+  {
+    "id": "c1758872541383",
+    "name": " اولاد مدحت عاصم ",
+    "phone": "",
+    "address": "",
+    "notes": "",
+    "debt": 0,
+    "invoiceCount": 0,
+    "lastTransaction": ""
+  },
+  {
+    "id": "c1758805599021",
+    "name": "ابو السيد",
+    "phone": "01033107629",
+    "address": "",
+    "notes": "قلب اخوه ",
+    "debt": 0,
+    "invoiceCount": 1,
+    "lastTransaction": "2025-09-25"
+  },
+  {
+    "id": "c1758243250078",
+    "name": "مريم",
+    "phone": "",
+    "address": "",
+    "notes": "",
+    "debt": 0,
+    "invoiceCount": 1,
+    "lastTransaction": "2025-09-19"
+  },
+  {
+    "id": "c1758243092350",
+    "name": "امين ",
+    "phone": "",
+    "address": "",
+    "notes": "",
+    "debt": 0,
+    "invoiceCount": 1,
+    "lastTransaction": "2025-09-19"
+  },
+  {
+    "id": "c1758087723847",
+    "name": "شوشو",
+    "phone": "",
+    "address": "",
+    "notes": "",
+    "debt": 0,
+    "invoiceCount": 2,
+    "lastTransaction": "2025-10-02"
+  },
+  {
+    "id": "c1758087088182",
+    "name": "ام جمال",
+    "phone": "",
+    "address": "",
+    "notes": "20",
+    "debt": 245,
+    "invoiceCount": 9,
+    "lastTransaction": "2025-10-25"
+  },
+  {
+    "id": "c1755469512243",
+    "name": "ام امين ",
+    "phone": "",
+    "address": "",
+    "notes": "",
+    "debt": 1760,
+    "invoiceCount": 2,
+    "lastTransaction": "2025-09-25"
+  }
+]

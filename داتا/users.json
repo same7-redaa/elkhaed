@@ -1,0 +1,32 @@
+[
+  {
+    "id": "u1",
+    "name": "AMIN",
+    "password": "2910",
+    "status": "نشط",
+    "permissions": {
+      "0": true,
+      "1": true,
+      "2": true,
+      "3": true,
+      "4": true,
+      "5": true,
+      "6": true
+    }
+  },
+  {
+    "id": "u1762789229032",
+    "name": "manal",
+    "password": "1010",
+    "status": "نشط",
+    "permissions": {
+      "0": false,
+      "1": false,
+      "2": true,
+      "3": false,
+      "4": false,
+      "5": false,
+      "6": false
+    }
+  }
+]
