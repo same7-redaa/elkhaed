@@ -227,9 +227,18 @@ export const DashboardLayout: React.FC<DashboardLayoutProps> = ({ children }) =>
 
                             {/* Smart Hostname Logic: Use fetched IP from server if available */}
                             {(() => {
-                                // Prefer server-detected IP, fallback to window hostname (if not localhost), then brute fallback
-                                const effectiveHost = serverIP || (window.location.hostname !== 'localhost' ? window.location.hostname : 'localhost');
-                                const link = `http://${effectiveHost}:5173/mobile`;
+                                // Smart Hostname Logic
+                                const isLocal = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
+                                let link = '';
+
+                                if (isLocal) {
+                                    // Local Development: Use IP + Port 5173
+                                    const effectiveHost = serverIP || 'localhost';
+                                    link = `http://${effectiveHost}:5173/mobile`;
+                                } else {
+                                    // Production (Vercel): Use current Origin (detects https & port automatically)
+                                    link = `${window.location.origin}/mobile`;
+                                }
 
                                 return (
                                     <>
