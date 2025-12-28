@@ -1,12 +1,10 @@
 import React, { useEffect, useState } from 'react';
 import { Peer } from 'peerjs';
-import { useStore } from '../store/useStore';
 import { Search, Wifi, WifiOff, Camera, X } from 'lucide-react';
 import { CameraScanner } from '../components/CameraScanner';
 import type { Product } from '../types';
 
 export const MobileApp: React.FC = () => {
-    // const { products } = useStore(); // We use Local State sync now
     const [conn, setConn] = useState<any>(null); // Connection instance
     const [isConnected, setIsConnected] = useState(false);
     const [isCameraOpen, setIsCameraOpen] = useState(false);
@@ -64,7 +62,7 @@ export const MobileApp: React.FC = () => {
         if (conn && isConnected) {
             conn.send({ type: 'SCAN', barcode: code });
             // Success Feedback
-            if (navigator.vibrate) navigator.vibrate([100, 50, 100]);
+            // if (navigator.vibrate) navigator.vibrate([100, 50, 100]);
         }
 
         // 2. Also search locally (Show result on phone too)
@@ -75,10 +73,12 @@ export const MobileApp: React.FC = () => {
     };
 
     // Filter Logic
-    const filteredProducts = localProducts.filter(p =>
-        p.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        p.barcode.includes(searchQuery)
-    );
+    const filteredProducts = localProducts.filter(p => {
+        const prod = p as any;
+        return prod.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+            (prod.barcode && prod.barcode.includes(searchQuery));
+    });
+
 
     return (
         <div className="min-h-screen bg-slate-50 font-stc pb-safe">
@@ -119,18 +119,21 @@ export const MobileApp: React.FC = () => {
                         <p>لا توجد منتجات مطابقة</p>
                     </div>
                 ) : (
-                    filteredProducts.map(product => (
-                        <div key={product.id} className="bg-white p-4 rounded-xl shadow-sm border border-slate-100 flex justify-between items-center active:scale-[0.99] transition-transform">
-                            <div>
-                                <h3 className="font-bold text-slate-800">{product.name}</h3>
-                                <p className="text-sm text-slate-500 mt-1">المخزون: <span className="font-bold text-indigo-600">{product.stock}</span></p>
+                    filteredProducts.map(p => {
+                        const product = p as any;
+                        return (
+                            <div key={product.id} className="bg-white p-4 rounded-xl shadow-sm border border-slate-100 flex justify-between items-center active:scale-[0.99] transition-transform">
+                                <div>
+                                    <h3 className="font-bold text-slate-800">{product.name}</h3>
+                                    <p className="text-sm text-slate-500 mt-1">المخزون: <span className="font-bold text-indigo-600">{product.stock}</span></p>
+                                </div>
+                                <div className="text-left">
+                                    <span className="block text-lg font-black text-slate-900">{product.price.toLocaleString()}</span>
+                                    <span className="text-xs text-slate-400 font-bold">جنيه</span>
+                                </div>
                             </div>
-                            <div className="text-left">
-                                <span className="block text-lg font-black text-slate-900">{product.price.toLocaleString()}</span>
-                                <span className="text-xs text-slate-400 font-bold">جنيه</span>
-                            </div>
-                        </div>
-                    ))
+                        );
+                    })
                 )}
             </div>
 

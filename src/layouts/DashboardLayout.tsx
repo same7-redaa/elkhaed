@@ -34,7 +34,6 @@ export const DashboardLayout: React.FC<DashboardLayoutProps> = ({ children }) =>
 
     // P2P State
     const [peerId, setPeerId] = useState<string>('');
-    const [remoteScanner, setRemoteScanner] = useState<any>(null); // Connected peer
 
     // Initialize PeerJS Host
     useEffect(() => {
@@ -50,7 +49,6 @@ export const DashboardLayout: React.FC<DashboardLayoutProps> = ({ children }) =>
 
         peer.on('connection', (conn) => {
             console.log('📲 New Mobile Connection:', conn.peer);
-            setRemoteScanner(conn);
 
             // Send Data Refresh to Mobile immediately
             conn.on('open', () => {
