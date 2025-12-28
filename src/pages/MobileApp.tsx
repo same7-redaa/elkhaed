@@ -1,59 +1,68 @@
 import React, { useEffect, useState } from 'react';
-import { io, Socket } from 'socket.io-client';
+import { Peer } from 'peerjs';
 import { useStore } from '../store/useStore';
 import { Search, Wifi, WifiOff, Camera, X } from 'lucide-react';
 import { CameraScanner } from '../components/CameraScanner';
-
-// عنوان الخادم (يجب تغييره لاحقاً لعنوان IP الكمبيوتر الحقيقي)
-// سنحاول استخدام window.location.hostname لجعلها تعمل تلقائياً محلياً
-const SOCKET_URL = `http://${window.location.hostname}:3001`;
+import type { Product } from '../types';
 
 export const MobileApp: React.FC = () => {
-    const { products } = useStore();
-    const [socket, setSocket] = useState<Socket | null>(null);
+    // const { products } = useStore(); // We use Local State sync now
+    const [conn, setConn] = useState<any>(null); // Connection instance
     const [isConnected, setIsConnected] = useState(false);
     const [isCameraOpen, setIsCameraOpen] = useState(false);
     const [searchQuery, setSearchQuery] = useState('');
 
     // Offline Data State
-    const [localProducts, setLocalProducts] = useState(products);
+    const [localProducts, setLocalProducts] = useState<Product[]>([]);
 
-    // Sync Store products to Local State (and LocalStorage for pure offline later)
+    // Determine Host ID from URL
+    const queryParams = new URLSearchParams(window.location.search);
+    const hostId = queryParams.get('host');
+
+    // PeerJS Connection Logic
     useEffect(() => {
-        setLocalProducts(products);
-    }, [products]);
+        if (!hostId) return;
 
-    // Socket Connection
-    useEffect(() => {
-        const newSocket = io(SOCKET_URL);
+        const peer = new Peer();
 
-        newSocket.on('connect', () => {
-            setIsConnected(true);
-            console.log("Connected to Sync Server");
+        peer.on('open', (id) => {
+            console.log('📱 Mobile Peer ID:', id);
+
+            // Connect to Host
+            const connection = peer.connect(hostId);
+
+            connection.on('open', () => {
+                console.log("✅ Connected to PC Host");
+                setIsConnected(true);
+                setConn(connection);
+            });
+
+            connection.on('data', (data: any) => {
+                console.log("📥 Received Data:", data);
+                if (data.type === 'SYNC') {
+                    setLocalProducts(data.products);
+                    if (navigator.vibrate) navigator.vibrate(50); // Haptic feedback on sync
+                }
+            });
+
+            connection.on('close', () => setIsConnected(false));
+            connection.on('error', () => setIsConnected(false));
         });
 
-        newSocket.on('disconnect', () => {
+        peer.on('error', (err) => {
+            console.error("Peer Error:", err);
             setIsConnected(false);
         });
 
-        // Listen for Remote Camera Trigger
-        newSocket.on('OPEN_CAMERA', () => {
-            setIsCameraOpen(true);
-            // Vibrate phone to alert user
-            if (navigator.vibrate) navigator.vibrate(200);
-        });
-
-        setSocket(newSocket);
-
         return () => {
-            newSocket.close();
+            peer.destroy();
         };
-    }, []);
+    }, [hostId]);
 
     const handleScan = (code: string) => {
-        // 1. Send to PC
-        if (socket && isConnected) {
-            socket.emit('SCAN_RESULT', code);
+        // 1. Send to PC via PeerJS
+        if (conn && isConnected) {
+            conn.send({ type: 'SCAN', barcode: code });
             // Success Feedback
             if (navigator.vibrate) navigator.vibrate([100, 50, 100]);
         }

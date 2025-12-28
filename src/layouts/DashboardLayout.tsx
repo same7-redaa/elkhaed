@@ -6,6 +6,7 @@ import { useLocation, useNavigate } from 'react-router-dom';
 import QRCode from "react-qr-code";
 import { useStore } from '../store/useStore';
 import { useUI } from '../store/useUI';
+import { Peer } from 'peerjs';
 import { clsx } from 'clsx';
 
 interface DashboardLayoutProps {
@@ -30,17 +31,59 @@ export const DashboardLayout: React.FC<DashboardLayoutProps> = ({ children }) =>
 
     // QR Modal State
     const [isQROpen, setIsQROpen] = useState(false);
-    const [serverIP, setServerIP] = useState<string>(''); // Store detected IP
 
-    // Fetch IP when QR opens
+    // P2P State
+    const [peerId, setPeerId] = useState<string>('');
+    const [remoteScanner, setRemoteScanner] = useState<any>(null); // Connected peer
+
+    // Initialize PeerJS Host
     useEffect(() => {
-        if (isQROpen) {
-            fetch(`http://${window.location.hostname}:3001/api/ip`)
-                .then(res => res.json())
-                .then(data => setServerIP(data.ip))
-                .catch(err => console.error("Failed to fetch IP", err));
-        }
-    }, [isQROpen]);
+        // Prevent server-side or multiple inits
+        if (typeof window === 'undefined') return;
+
+        const peer = new Peer(); // Auto-generate ID
+
+        peer.on('open', (id) => {
+            console.log('📡 Host Peer ID:', id);
+            setPeerId(id);
+        });
+
+        peer.on('connection', (conn) => {
+            console.log('📲 New Mobile Connection:', conn.peer);
+            setRemoteScanner(conn);
+
+            // Send Data Refresh to Mobile immediately
+            conn.on('open', () => {
+                const syncData = {
+                    type: 'SYNC',
+                    products: useStore.getState().products
+                };
+                conn.send(syncData);
+                console.log('Phone Connected!');
+            });
+
+            // Listen for Barcodes from Mobile
+            conn.on('data', (data: any) => {
+                if (data.type === 'SCAN') {
+                    const barcode = data.barcode;
+                    const allProducts = useStore.getState().products;
+                    const product = allProducts.find(p => p.barcode === barcode);
+
+                    if (product) {
+                        useStore.getState().addToCart(product);
+                        const audio = new Audio('/beep.mp3');
+                        audio.play().catch(() => { });
+                    } else {
+                        alert(`منتج غير موجود: ${barcode}`);
+                    }
+                }
+            });
+        });
+
+        return () => {
+            peer.destroy();
+        };
+    }, []);
 
     // Close dropdowns on click outside
     useEffect(() => {
@@ -91,10 +134,11 @@ export const DashboardLayout: React.FC<DashboardLayoutProps> = ({ children }) =>
             />
 
             <div
-                className={`flex-1 flex flex-col transition-all duration-300 ease-in-out h-full
-            ${isSidebarCollapsed ? 'mr-20' : 'mr-64'} 
-            ${isChatOpen ? 'ml-0 md:ml-96' : 'ml-0'}
-        `}
+                className={clsx(
+                    "flex-1 flex flex-col transition-all duration-300 ease-in-out h-full",
+                    isSidebarCollapsed ? "mr-20" : "mr-64",
+                    isChatOpen ? "ml-0 md:ml-96" : "ml-0"
+                )}
             >
                 <header className="h-[70px] bg-white border-b border-slate-200 px-6 flex items-center justify-between shadow-sm flex-none z-20">
                     <div className="flex items-center gap-4">
@@ -207,7 +251,7 @@ export const DashboardLayout: React.FC<DashboardLayoutProps> = ({ children }) =>
 
             <AIAssistant />
 
-            {/* QR Code Modal */}
+            {/* QR Code Modal for P2P Connection */}
             {isQROpen && (
                 <div className="fixed inset-0 bg-black/50 z-[100] flex items-center justify-center backdrop-blur-sm p-4 animate-in fade-in">
                     <div className="bg-white rounded-3xl p-8 max-w-sm w-full shadow-2xl relative">
@@ -219,44 +263,31 @@ export const DashboardLayout: React.FC<DashboardLayoutProps> = ({ children }) =>
                         </button>
 
                         <div className="text-center space-y-4">
-                            <div className="w-16 h-16 bg-indigo-100 text-indigo-600 rounded-2xl flex items-center justify-center mx-auto mb-2">
-                                <Smartphone size={32} />
-                            </div>
-                            <h2 className="text-2xl font-bold text-slate-800">ربط الهاتف</h2>
-                            <p className="text-slate-500 text-sm">امسح الرمز أدناه بكاميرا هاتفك لفتح تطبيق الموظف</p>
+                            {!peerId ? (
+                                <div className="text-center p-8">
+                                    <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-indigo-600 mx-auto mb-2"></div>
+                                    <p className="text-slate-500">جاري إنشاء قناة اتصال آمنة...</p>
+                                </div>
+                            ) : (
+                                <>
+                                    <div className="w-16 h-16 bg-indigo-100 text-indigo-600 rounded-2xl flex items-center justify-center mx-auto mb-2">
+                                        <Smartphone size={32} />
+                                    </div>
+                                    <h2 className="text-2xl font-bold text-slate-800">ربط الهاتف</h2>
+                                    <p className="text-slate-500 text-sm">امسح الرمز أدناه بكاميرا هاتفك</p>
 
-                            {/* Smart Hostname Logic: Use fetched IP from server if available */}
-                            {(() => {
-                                // Smart Hostname Logic
-                                const isLocal = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
-                                let link = '';
+                                    <div className="bg-white p-4 rounded-xl border-2 border-slate-900 inline-block mx-auto">
+                                        <QRCode
+                                            value={`${window.location.origin}/mobile?host=${peerId}`}
+                                            size={200}
+                                            style={{ height: "auto", maxWidth: "100%", width: "100%" }}
+                                            viewBox={`0 0 256 256`}
+                                        />
+                                    </div>
 
-                                if (isLocal) {
-                                    // Local Development: Use IP + Port 5173
-                                    const effectiveHost = serverIP || 'localhost';
-                                    link = `http://${effectiveHost}:5173/mobile`;
-                                } else {
-                                    // Production (Vercel): Use current Origin (detects https & port automatically)
-                                    link = `${window.location.origin}/mobile`;
-                                }
-
-                                return (
-                                    <>
-                                        <div className="bg-white p-4 rounded-xl border-2 border-slate-900 inline-block mx-auto">
-                                            <QRCode
-                                                value={link}
-                                                size={200}
-                                                style={{ height: "auto", maxWidth: "100%", width: "100%" }}
-                                                viewBox={`0 0 256 256`}
-                                            />
-                                        </div>
-
-                                        <div className="bg-slate-50 p-3 rounded-lg text-xs font-mono text-slate-600 break-all dir-ltr select-text" dir="ltr">
-                                            {link}
-                                        </div>
-                                    </>
-                                );
-                            })()}
+                                    <p className="text-xs text-slate-400 mt-2">يعمل على أي جهاز (Android/iOS) بدون تثبيت</p>
+                                </>
+                            )}
                         </div>
                     </div>
                 </div>
