@@ -317,16 +317,15 @@ export const useStore = create<AppState>()(
             }),
 
             addToCart: (item) => set((state) => {
-                // Check stock availability first
                 if (item.stock <= 0) {
-                    // Optional: You could trigger a UI notification here via a callback or state flag
+                    alert('⚠️ تنبيه: هذا المنتج نفذت كميته من المخزن!');
                     return state;
                 }
 
                 const existing = state.cart.find((i) => i.id === item.id);
                 if (existing) {
                     if (existing.quantity >= item.stock) {
-                        // Cannot add more than storage
+                        alert('⚠️ تنبيه: لا توجد كمية كافية في المخزن!');
                         return state;
                     }
                     return { cart: state.cart.map((i) => i.id === item.id ? { ...i, quantity: i.quantity + 1 } : i) };
